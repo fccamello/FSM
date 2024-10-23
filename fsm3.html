@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #eed8c7;
+        }
+        .vending-machine {
+            background-color: #f7b091;
+            border: 5px solid #333;
+            border-radius: 5px;
+            padding: 20px;
+            width: 35%;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+        .header {
+            grid-column: 1 / -1; 
+            text-align: center;
+        }
+        .item {
+            background-color: #fff;
+            border: 1px solid #999;
+            border-radius: 5px;
+            padding: 10px;
+            text-align: center;
+        }
+        button {
+            width: 100%;
+            padding: 5px;
+            margin-top: 5px;
+            cursor: pointer;
+        }
+        #message, #inserted-amount, #trans-complete {
+            grid-column: 1 / -1;
+            text-align: center;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        .coin-buttons {
+            grid-column: 1 / -1;
+            display: flex;
+            justify-content: space-around;
+            margin-top: 10px;
+        }
+        .coin-button {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            font-size: 16px;
+            font-weight: bold;
+            background-color: #ffd700;
+            border: 2px solid #b8860b;
+        }
+    </style>
+</head>
+<body>
+    <div class="vending-machine">   
+        <div class="header"><h4>CIT-U SMART VENDING MACHINE</h4></div>
+        <div class="header">Please pick your desired snack..</div>
+        
+        <!-- Snack Items -->
+        <div class="item">
+            <img src="/images/isaw.jpg" style="width: 60px; height:auto;">
+            <p>Isaw</p>
+            <button onclick="selectItem('Isaw', 0)">₱10</button>
+        </div>
+        <div class="item">
+            <img src="images/fishball.jpg" style="width: 60px; height:auto;">
+            <p>Fishball</p>
+            <button onclick="selectItem('Fish Ball', 1)">₱15</button>
+        </div>
+        <div class="item">
+            <img src="images/kwekkwek.jpg" style="width: 60px; height:auto;">
+            <p>Kwek-Kwek</p>
+            <button onclick="selectItem('Kwek-Kwek', 2)">₱20</button>
+        </div>
+        <div class="item">
+            <img src="images/buko juice.png" style="width: 60px; height: 60px;">
+            <p>Buko Juice</p>
+            <button onclick="selectItem('Buko Juice',3)">₱10</button>
+        </div>
+        <div class="item">
+            <img src="images/halohalo.jpeg" style="width: 60px; height: 60px;">
+            <p>Halo Halo</p>
+            <button onclick="selectItem('Halo Halo', 4)">₱20</button>
+        </div>
+        <div class="item">
+            <img src="images/water.png" style="width: 60px; height: 60px;">
+            <p>Water</p>
+            <button onclick="selectItem('Water', 5)">₱15</button>
+        </div>
+       
+        <div id="message"></div>
+        <div class="coin-buttons">
+            <button class="coin-button" onclick="insertCoin(5)">₱5</button>
+            <button class="coin-button" onclick="insertCoin(10)">₱10</button>
+            <button class="coin-button" onclick="insertCoin(20)">₱20</button>
+        </div>
+        <div id="inserted-amount">Inserted: ₱0</div>
+        <div id="trans-complete"></div>
+        <div class="header" id="btnreset">
+            <button onclick="resetMachine()">GET CHANGE</button>
+        </div>
+    </div>
+
+    <script>
+
+        
+        const transitionTable = [
+            [5, 10, 20, -1, -1, -1, -1, -1, -1], 
+            [10, 15, 20, -1, -1, -1, -1, -1, -1],
+            [15, 20, 20, 0, -1, -1, 0, -1, -1], 
+            [20, 20, 20, 5, 0, -1, 5, -1, 0], 
+            [20, 20, 20, 10, 5, 0, 10, 0, 5]  
+        ];
+
+        let currentState = 0; 
+        let insertedAmount = 0;
+        let newAmount = 0;
+        let amount = 0;
+
+        if(insertedAmount == 0){
+                disableCButtons();
+            }
+
+        function insertCoin(value) {
+            if(insertedAmount == 0){
+                disableCButtons();
+            }
+            enableButtons();
+            const inputIndex = [5, 10, 20, 0, 1, 2, 3, 4, 5].indexOf(value);
+            console.log(currentState);
+            console.log(inputIndex);
+            const state = transitionTable[currentState][inputIndex];
+            insertedAmount = state;
+            console.log(state);
+
+            if (currentState >= 1 && inputIndex > 1 || state == 20 && inputIndex >= 0 && currentState > 3 || currentState == 3 && state == 20 && inputIndex == 1 ){
+                displayMessage(`Maximum Deposit is 20, please purchase an item.`);
+            }
+            else{
+                currentState = getStateFromAmount(insertedAmount);
+                updateInsertedAmount();
+                newAmount = value;
+                amount = newAmount;
+                displayMessage(`Inserted: ₱${value}`);
+            }
+         
+        }
+
+        function getStateFromAmount(amount) {
+            if (amount == 0) return 0;
+            if (amount == 5) return 1;
+            if (amount == 10) return 2;
+            if (amount == 15) return 3;
+            if (amount == 20) return 4;
+        }
+
+
+        function selectItem(item, index) {
+            newAmount = transitionTable[currentState][index + 3];
+            console.log(newAmount);
+            if (newAmount == -1) {
+                displayMessage('Insufficient balance. Please insert more coins.');
+                newAmount = amount;
+
+            } 
+            else{
+            displayMessage(`Dispensing ${item}.`);
+            document.getElementById('inserted-amount').innerText = `Inserted: ₱${newAmount}`;
+            currentState = getStateFromAmount(newAmount);
+
+            if (newAmount == 0){
+                disableCButtons();
+            }
+            }
+        }
+
+       
+        function resetMachine() {
+            document.getElementById('message').innerText = `Transaction Complete! Change ₱${newAmount}`;
+            setTimeout(() => { clearMessages(); }, 1000);
+            currentState = 0;
+            insertedAmount = 0;
+            updateInsertedAmount();
+        }
+
+        function updateInsertedAmount() {
+            document.getElementById('inserted-amount').innerText = `Inserted: ₱${insertedAmount}`;
+            if(insertedAmount == 0){
+                disableCButtons();
+            }
+        }
+
+        function displayMessage(message) {
+            document.getElementById('message').innerText = message;
+            setTimeout(() => {
+                document.getElementById('message').innerText = '';
+              }, 1000);        
+        }
+
+        function clearMessages() {
+            document.getElementById('message').innerText = '';
+            document.getElementById('trans-complete').innerText = '';
+        }
+
+
+        function disableCButtons() {
+        const coinButtons = document.querySelectorAll('.header button');
+        coinButtons.forEach(button => {
+            button.disabled = true;
+        });   
+        }      
+
+        function enableButtons() {
+        const coinButtons = document.querySelectorAll('.header button');
+        coinButtons.forEach(button => {
+            button.disabled = false;
+        });   
+        }      
+
+        disableCButtons();
+        
+    </script>
+</body>
+</html>
